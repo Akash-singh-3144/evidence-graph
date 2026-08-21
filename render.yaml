@@ -1,0 +1,101 @@
+services:
+  # 1. Main FastAPI Backend
+  - type: web
+    name: evidence-graph-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    region: ohio
+    plan: free
+    envVars:
+      - key: APP_DB_HOST
+        fromDatabase:
+          name: evidence-app-db
+          property: host
+      - key: APP_DB_PORT
+        fromDatabase:
+          name: evidence-app-db
+          property: port
+      - key: APP_DB_USER
+        fromDatabase:
+          name: evidence-app-db
+          property: user
+      - key: APP_DB_PASSWORD
+        fromDatabase:
+          name: evidence-app-db
+          property: password
+      - key: APP_DB_NAME
+        fromDatabase:
+          name: evidence-app-db
+          property: database
+      - key: QDRANT_HOST
+        fromService:
+          type: web
+          name: evidence-qdrant
+          property: host
+      - key: QDRANT_PORT
+        value: "6333"
+      - key: GEMINI_API_KEY
+        sync: false # User must enter this manually in Render dashboard
+      - key: GEMINI_MODEL
+        value: "gemini-2.0-flash"
+      - key: EMBEDDING_MODEL
+        value: "text-embedding-004"
+
+  # 2. Qdrant Vector Store
+  - type: web
+    name: evidence-qdrant
+    env: docker
+    image: qdrant/qdrant:latest
+    region: ohio
+    plan: free
+    disk:
+      name: qdrant-storage
+      mountPath: /qdrant/storage
+      sizeGB: 1
+
+  # 3. Database MCP Plugin
+  - type: web
+    name: mcp-database
+    env: docker
+    dockerfilePath: ./mcp_servers/database/Dockerfile
+    dockerContext: ./mcp_servers/database
+    region: ohio
+    plan: free
+    envVars:
+      - key: TARGET_DB_HOST
+        sync: false
+      - key: TARGET_DB_USER
+        sync: false
+      - key: TARGET_DB_PASSWORD
+        sync: false
+
+  # 4. Web MCP Plugin
+  - type: web
+    name: mcp-web
+    env: docker
+    dockerfilePath: ./mcp_servers/web/Dockerfile
+    dockerContext: ./mcp_servers/web
+    region: ohio
+    plan: free
+
+  # 5. PDF MCP Plugin
+  - type: web
+    name: mcp-pdf
+    env: docker
+    dockerfilePath: ./mcp_servers/pdf/Dockerfile
+    dockerContext: ./mcp_servers/pdf
+    region: ohio
+    plan: free
+    disk:
+      name: pdf-storage
+      mountPath: /app/data
+      sizeGB: 1
+
+databases:
+  # 6. Application PostgreSQL Database
+  - name: evidence-app-db
+    region: ohio
+    plan: free
+    databaseName: evidence_graph
+    user: evidence_user

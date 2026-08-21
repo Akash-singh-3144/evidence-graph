@@ -2,7 +2,11 @@ from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from app.config.settings import settings
 
-client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
+if settings.QDRANT_HOST.endswith(".onrender.com") or settings.QDRANT_HOST.startswith("http"):
+    _url = f"https://{settings.QDRANT_HOST}" if not settings.QDRANT_HOST.startswith("http") else settings.QDRANT_HOST
+    client = AsyncQdrantClient(url=_url, port=443, timeout=45.0)
+else:
+    client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT)
 
 EVIDENCE_COLLECTION = "evidence_chunks"
 

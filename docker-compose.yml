@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  postgres-app:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: evidence_user
+      POSTGRES_PASSWORD: evidence_password
+      POSTGRES_DB: evidence_graph
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evidence_user -d evidence_graph"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-target:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: target_user
+      POSTGRES_PASSWORD: target_password
+      POSTGRES_DB: target_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_target_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U target_user -d target_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres-app:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+
+  mcp-pdf:
+    build:
+      context: ./mcp_servers/pdf
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      - ./mcp_servers/pdf:/app
+      - ./mcp_servers/common:/app/common
+    depends_on:
+      - qdrant
+
+  mcp-web:
+    build:
+      context: ./mcp_servers/web
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    volumes:
+      - ./mcp_servers/web:/app
+      - ./mcp_servers/common:/app/common
+
+  mcp-db:
+    build:
+      context: ./mcp_servers/database
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env
+    volumes:
+      - ./mcp_servers/database:/app
+      - ./mcp_servers/common:/app/common
+    depends_on:
+      postgres-target:
+        condition: service_healthy
+
+volumes:
+  postgres_app_data:
+  postgres_target_data:
+  qdrant_data:

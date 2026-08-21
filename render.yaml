@@ -4,7 +4,7 @@ services:
     name: evidence-graph-backend
     env: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: .
+    dockerContext: ./backend
     region: ohio
     plan: free
     envVars:

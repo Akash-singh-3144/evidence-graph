@@ -10,6 +10,15 @@ app = FastAPI(
     version=settings.VERSION,
 )
 
+@app.on_event("startup")
+async def startup_event():
+    from app.rag.vectorstore.collections import init_qdrant
+    try:
+        await init_qdrant()
+        logger.info("Qdrant collection schema initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Qdrant collections: {e}")
+
 # CORS
 app.add_middleware(
     CORSMiddleware,

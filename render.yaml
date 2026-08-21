@@ -50,10 +50,6 @@ services:
     dockerContext: ./qdrant
     region: ohio
     plan: free
-    disk:
-      name: qdrant-storage
-      mountPath: /qdrant/storage
-      sizeGB: 1
 
   # 3. Database MCP Plugin
   - type: web
@@ -88,10 +84,6 @@ services:
     dockerContext: ./mcp_servers/pdf
     region: ohio
     plan: free
-    disk:
-      name: pdf-storage
-      mountPath: /app/data
-      sizeGB: 1
 
 databases:
   # 6. Application PostgreSQL Database

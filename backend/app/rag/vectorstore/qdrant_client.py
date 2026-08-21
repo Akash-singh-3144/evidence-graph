@@ -10,7 +10,13 @@ class VectorStoreClient:
     def __init__(self):
         global _qdrant_client
         if _qdrant_client is None:
-            _qdrant_client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT, timeout=30.0)
+            if settings.QDRANT_HOST.endswith(".onrender.com"):
+                # Force public HTTPS routing to physically wake up the sleeping Free Tier Qdrant node
+                _qdrant_client = AsyncQdrantClient(url=f"https://{settings.QDRANT_HOST}", port=443, timeout=45.0)
+            elif settings.QDRANT_HOST.startswith("http"):
+                _qdrant_client = AsyncQdrantClient(url=settings.QDRANT_HOST, timeout=45.0)
+            else:
+                _qdrant_client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT, timeout=45.0)
         self.client = _qdrant_client
         self.collection_name = "evidence_chunks"
 

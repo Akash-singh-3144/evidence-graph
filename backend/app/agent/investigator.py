@@ -105,9 +105,10 @@ class Investigator:
         
         # 5. Synthesis
         synthesis_prompt = (
-            f"Synthesize the answer for '{query}' using the provided evidence array: {ranked}. "
-            f"CRITICAL ASSISTANT RULE: The final conclusion MUST be exactly 2 or 3 lines of text. Do NOT output giant paragraphs, bullet points, code blocks, or SQL logic. Give a dense, exact, short 2-3 line answer.\n"
-            f"SECOND CRITICAL RULE: If comparing numbers (like ages, votes, metrics) or if a chart/graph is relevant, DO NOT DRAW ASCII CHARTS (e.g. ▇▇). Instead, output a JSON array of the extracted data wrapped exactly in a <chart_data> tag anywhere in your text. Example: <chart_data>[{{\"Name\": \"Huang\", \"Age\": 63}}, {{\"Name\": \"Kress\", \"Age\": 58}}]</chart_data>. The frontend will natively draw it. State confidence {confidence}"
+            f"Synthesize the answer for '{query}' using ONLY the provided evidence array: {ranked}. "
+            f"CRITICAL ASSISTANT RULE 1: You are strictly forbidden from using external knowledge. If the answer is not clearly present in the provided evidence array, you MUST respond exactly with: 'The provided documents do not contain the answer to this question.'\n"
+            f"CRITICAL ASSISTANT RULE 2: The final conclusion MUST be exactly 2 or 3 lines of text. Do NOT output giant paragraphs, bullet points, code blocks, or SQL logic. Give a dense, exact, short 2-3 line answer.\n"
+            f"CRITICAL ASSISTANT RULE 3: If comparing numbers (like ages, votes, metrics) or if a chart/graph is relevant, DO NOT DRAW ASCII CHARTS (e.g. ▇▇). Instead, output a JSON array of the extracted data wrapped exactly in a <chart_data> tag anywhere in your text. Example: <chart_data>[{{\"Name\": \"Huang\", \"Age\": 63}}, {{\"Name\": \"Kress\", \"Age\": 58}}]</chart_data>. The frontend will natively draw it. State confidence {confidence}"
         )
         answer = await self.llm.generate_response(synthesis_prompt)
         

@@ -66,7 +66,7 @@ class Investigator:
                         db_result = resp.text
                     collector.collect("mcp_postgres", "database", {"result": db_result}, {"query": sql_query, "claim": "Database analytical response fetched natively"})
             except Exception as e:
-                collector.collect("mcp_postgres", "database", {"error": repr(e)}, {"query": sql_query, "claim": f"Database fetch failed: {repr(e)}"})
+                pass # Silently drop DB errors so the LLM doesn't falsely blame authentication failures for missing PDF facts
 
         if any(t.lower() in ["pdf", "web"] for t in tools):
             from app.rag.embeddings.service import EmbeddingService
@@ -79,12 +79,12 @@ class Investigator:
                 query_vector = vectors[0]
                 
                 if "pdf" in [t.lower() for t in tools]:
-                    pdf_results = await q_client.search(query_vector, source_type="pdf", limit=3)
+                    pdf_results = await q_client.search(query_vector, source_type="pdf", limit=15)
                     for res in pdf_results:
                         collector.collect("mcp_pdf", "pdf", {"text": res.payload["text"]}, res.payload)
                 
                 if "web" in [t.lower() for t in tools]:
-                    web_results = await q_client.search(query_vector, source_type="web", limit=3)
+                    web_results = await q_client.search(query_vector, source_type="web", limit=15)
                     for res in web_results:
                         collector.collect("mcp_web", "web", {"text": res.payload["text"]}, res.payload)
             except Exception as e:

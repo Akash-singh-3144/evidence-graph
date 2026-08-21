@@ -9,5 +9,7 @@ __pycache__/
 venv/
 *.log
 .DS_Store
-*.txt
+*_logs.txt
+logs_*.txt
+test_out*.txt
 test_*.py

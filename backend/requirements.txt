@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+sqlalchemy
+asyncpg
+alembic
+qdrant-client
+google-genai
+mcp
+httpx
+sse-starlette
+python-multipart
+beautifulsoup4
+PyMuPDF
+networkx
+python-dotenv

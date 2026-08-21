@@ -10,6 +10,20 @@ app = FastAPI(
     version=settings.VERSION,
 )
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_msg = f"{type(exc).__name__}: {str(exc)}"
+    tb = traceback.format_exc()
+    logger.error(f"Global exception: {error_msg}\n{tb}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": error_msg, "traceback": tb}
+    )
+
 @app.on_event("startup")
 async def startup_event():
     from app.rag.vectorstore.collections import init_qdrant

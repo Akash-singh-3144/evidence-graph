@@ -51,20 +51,23 @@ async def upload_pdf(file: UploadFile = File(...)):
             all_chunks.append(chunk)
             metadata_map.append({"document_name": file.filename, "page_number": page["page_number"]})
             
-    if all_chunks:
-        for i in range(0, len(all_chunks), 90):
-            batch_texts = all_chunks[i:i+90]
-            batch_meta = metadata_map[i:i+90]
-            vectors = await embedder.generate_embeddings_batch(batch_texts)
-            for j, vector in enumerate(vectors):
-                await q_client.insert_chunk(
-                    source_id=source_id,
-                    source_type="pdf",
-                    text=batch_texts[j],
-                    vector=vector,
-                    metadata=batch_meta[j]
-                )
-            total_chunks += len(batch_texts)
+    if not all_chunks:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="No readable text found in this PDF. Please ensure it contains highlightable text and is not a scanned/image-only document.")
+
+    for i in range(0, len(all_chunks), 90):
+        batch_texts = all_chunks[i:i+90]
+        batch_meta = metadata_map[i:i+90]
+        vectors = await embedder.generate_embeddings_batch(batch_texts)
+        for j, vector in enumerate(vectors):
+            await q_client.insert_chunk(
+                source_id=source_id,
+                source_type="pdf",
+                text=batch_texts[j],
+                vector=vector,
+                metadata=batch_meta[j]
+            )
+        total_chunks += len(batch_texts)
 
     return {"status": "success", "chunks_indexed": total_chunks}
 

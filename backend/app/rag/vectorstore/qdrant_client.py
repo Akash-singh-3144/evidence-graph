@@ -11,8 +11,8 @@ class VectorStoreClient:
         global _qdrant_client
         if _qdrant_client is None:
             if settings.QDRANT_HOST.endswith(".onrender.com"):
-                # Force public HTTPS routing to physically wake up the sleeping Free Tier Qdrant node
-                _qdrant_client = AsyncQdrantClient(url=f"https://{settings.QDRANT_HOST}", port=443, timeout=45.0)
+                _url = f"https://{settings.QDRANT_HOST}" if not settings.QDRANT_HOST.startswith("http") else settings.QDRANT_HOST
+                _qdrant_client = AsyncQdrantClient(url=_url, port=443, timeout=45.0)
             elif settings.QDRANT_HOST.startswith("http"):
                 _qdrant_client = AsyncQdrantClient(url=settings.QDRANT_HOST, timeout=45.0)
             else:

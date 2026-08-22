@@ -1,15 +1,282 @@
+# ============================================================
+# ENVIRONMENT & SECRETS
+# ============================================================
+
+.env
+.env.*
+!.env.example
+!.env.sample
+!frontend/.env.production
+!frontend/.env.development
+
+# Local credentials / secrets
+*.pem
+*.key
+*.crt
+credentials.json
+service-account*.json
+secrets/
+secret/
+.secrets/
+
+# ============================================================
+# NODE.JS / NPM / YARN / PNPM
+# ============================================================
+
 node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager caches
+.npmrc.local
+
+# ============================================================
+# NEXT.JS
+# ============================================================
+
 .next/
+out/
+.vercel/
+.turbo/
+
+# Next.js cache
+.next/cache/
+
+# ============================================================
+# JAVASCRIPT BUILD / DISTRIBUTION
+# ============================================================
+
 dist/
 build/
+coverage/
+lib/
+.tmp/
+temp/
+tmp/
+
+# ============================================================
+# PYTHON
+# ============================================================
+
 __pycache__/
-*.pyc
-.env
+*.py[cod]
+*$py.class
+
+# Virtual environments
 .venv/
 venv/
+env/
+ENV/
+.python-version
+
+# Python packaging
+*.egg
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+wheels/
+sdist/
+MANIFEST
+
+# Build artifacts
+build/
+dist/
+
+# ============================================================
+# PYTHON TESTING / COVERAGE
+# ============================================================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ============================================================
+# LOGS
+# ============================================================
+
 *.log
-.DS_Store
+logs/
+log/
+
 *_logs.txt
 logs_*.txt
 test_out*.txt
+test_*.log
+
+# ============================================================
+# DATABASES / LOCAL DATA
+# ============================================================
+
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Local development data
+data/
+local_data/
+storage/
+
+# ============================================================
+# LLM / AI / ML ARTIFACTS
+# ============================================================
+
+# Model files
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.gguf
+*.ggml
+
+# ML experiment outputs
+wandb/
+mlruns/
+runs/
+checkpoints/
+models/
+artifacts/
+
+# Hugging Face cache
+.cache/
+huggingface/
+.huggingface/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ============================================================
+# GENERATED AI / VECTOR DATABASE DATA
+# ============================================================
+
+chroma/
+chroma_db/
+vectorstore/
+vector_db/
+embeddings/
+faiss_index/
+*.faiss
+
+# ============================================================
+# UPLOADS / GENERATED FILES
+# ============================================================
+
+uploads/
+generated/
+generated_files/
+output/
+outputs/
+media/
+
+# ============================================================
+# IDE / EDITORS
+# ============================================================
+
+.vscode/
+.idea/
+*.iml
+
+# VS Code local settings
+.history/
+
+# Vim
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# ============================================================
+# TYPESCRIPT
+# ============================================================
+
+*.tsbuildinfo
+
+# ============================================================
+# DOCKER
+# ============================================================
+
+docker-compose.override.yml
+.docker/
+
+# ============================================================
+# SERVERLESS / CLOUD
+# ============================================================
+
+.serverless/
+.aws-sam/
+.sam/
+
+# ============================================================
+# OS / TEMPORARY FILES
+# ============================================================
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# ============================================================
+# LOCAL CONFIGURATION
+# ============================================================
+
+*.local
+config.local.*
+settings.local.*
+
+# ============================================================
+# GENERATED DOCUMENTS
+# ============================================================
+
+*.pdf
+*.docx
+*.xlsx
+*.csv
+
+# Keep important example/sample files
+!docs/**/*.pdf
+!data/**/*.csv
+
+# ============================================================
+# SECURITY / CERTIFICATES
+# ============================================================
+
+*.p12
+*.pfx
+*.jks
+
+# ============================================================
+# CUSTOM PROJECT FILES
+# ============================================================
+
+test_out*.txt
 test_*.py
+debug/
+debug_*
+scratch/

@@ -21,10 +21,14 @@ class Investigator:
         self.llm = GeminiClient()
 
     async def run(self, query: str):
-        # 1. Plan
-        plan = await self.planner.create_plan(query)
-        # 2. Tools
-        tools = await self.tool_selector.select_tools(query, plan)
+        # 1. Plan (Hardcoded to bypass LLM 15-RPM structural quotas!)
+        plan = [
+            "Mathematical Vector Abstraction of query requirements.",
+            "Sweep native PDF and Web databases for semantic matching.",
+            "RAG generation synthesis mapping."
+        ]
+        # 2. Tools (Automatically enforced rather than LLM selected due to quota limits)
+        tools = ["pdf", "web"]
         
         # Enforce PDF and WEB implicit search for all queries unconditionally 
         if "pdf" not in [t.lower() for t in tools]:

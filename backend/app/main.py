@@ -37,6 +37,7 @@ async def startup_event():
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[url.strip() for url in settings.FRONTEND_URLS.split(",") if url.strip()],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -14,60 +14,59 @@ class EmbeddingService:
 
     async def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
         # Using raw httpx REST proxy to flawlessly authenticate without relying on the python SDK version restrictions
-        url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
-        embeddings_matrix = []
+        url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:batchEmbedContents?key={self.api_key}"
         
         async with httpx.AsyncClient(timeout=45.0) as client:
+            requests_list = []
             for chunk_text in texts:
-                payload = {
+                requests_list.append({
                     "model": self.model,
                     "content": {
                         "parts": [{"text": chunk_text}]
                     }
-                }
-                response = await client.post(url, json=payload)
+                })
+            payload = {"requests": requests_list}
+            
+            response = await client.post(url, json=payload)
+            
+            if response.status_code == 404:
+                logger.warning(f"Embedding model {self.model} deprecated! Auto-discovering replacement via ModelService...")
+                reg_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={self.api_key}"
+                reg_resp = await client.get(reg_url)
+                valid_embedders = []
+                if reg_resp.status_code == 200:
+                    models = reg_resp.json().get("models", [])
+                    valid_embedders = [m["name"] for m in models if "embedContent" in m.get("supportedGenerationMethods", [])]
                 
-                if response.status_code == 404:
-                    logger.warning(f"Embedding model {self.model} deprecated! Auto-discovering replacement via ModelService...")
-                    # Query live Google API registry
-                    reg_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={self.api_key}"
-                    reg_resp = await client.get(reg_url)
-                    valid_embedders = []
-                    if reg_resp.status_code == 200:
-                        models = reg_resp.json().get("models", [])
-                        valid_embedders = [m["name"] for m in models if "embedContent" in m.get("supportedGenerationMethods", [])]
-                    
-                    if not valid_embedders:
-                        # Fallback heuristic matrix structurally guaranteeing Google integration
-                        valid_embedders = [
-                            "models/text-embedding-006",
-                            "models/text-embedding-005",
-                            "models/text-embedding-004", 
-                            "models/text-embedding-003",
-                            "models/embedding-001",
-                            "models/embedding-gecko-001",
-                            "models/embedding-gecko-002"
-                        ]
-                    
-                    for candidate in valid_embedders[::-1]:
-                        self.model = candidate
-                        logger.info(f"Auto-upgraded embedding engine testing: {self.model}")
-                        url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
-                        payload["model"] = self.model
-                        response = await client.post(url, json=payload)
-                        if response.status_code == 200:
-                            break
+                if not valid_embedders:
+                    valid_embedders = [
+                        "models/text-embedding-006",
+                        "models/text-embedding-005",
+                        "models/text-embedding-004", 
+                        "models/text-embedding-003",
+                        "models/embedding-001",
+                        "models/embedding-gecko-001",
+                        "models/embedding-gecko-002"
+                    ]
+                
+                for candidate in valid_embedders[::-1]:
+                    self.model = candidate
+                    logger.info(f"Auto-upgraded embedding engine testing: {self.model}")
+                    url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:batchEmbedContents?key={self.api_key}"
+                    for req in payload["requests"]:
+                        req["model"] = self.model
+                    response = await client.post(url, json=payload)
+                    if response.status_code == 200:
+                        break
 
-                if response.status_code != 200:
-                    error_data = response.text
-                    logger.error(f"Google REST API Error: {response.status_code} - {error_data}")
-                    raise ValueError(f"Google Embedding API rejected the request: HTTP {response.status_code}. Detail: {error_data}")
-                
-                res_json = response.json()
-                try:
-                    emb_values = res_json["embedding"]["values"]
-                    embeddings_matrix.append(emb_values)
-                except KeyError:
-                    raise ValueError(f"Failed to parse embedding vectors from valid REST response: {res_json}")
-                    
-        return embeddings_matrix
+            if response.status_code != 200:
+                error_data = response.text
+                logger.error(f"Google REST API Error: {response.status_code} - {error_data}")
+                raise ValueError(f"Google Embedding API rejected the request: HTTP {response.status_code}. Detail: {error_data}")
+            
+            res_json = response.json()
+            try:
+                embeddings_list = res_json["embeddings"]
+                return [e["values"] for e in embeddings_list]
+            except KeyError:
+                raise ValueError(f"Failed to parse embedding vectors from valid REST response: {res_json}")

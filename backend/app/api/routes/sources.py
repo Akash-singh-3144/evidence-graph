@@ -34,7 +34,6 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     embedder = EmbeddingService()
     q_client = VectorStoreClient()
-    await init_qdrant(q_client, embedder.dimension)
 
     loader = PDFLoader(temp_file.name)
     pages = loader.load_and_split_by_page()
@@ -59,6 +58,11 @@ async def upload_pdf(file: UploadFile = File(...)):
         batch_texts = all_chunks[i:i+90]
         batch_meta = metadata_map[i:i+90]
         vectors = await embedder.generate_embeddings_batch(batch_texts)
+        
+        if i == 0:
+            # Structurally intercept the modern dimension size on the fly to support Google's 3072 models seamlessly
+            await init_qdrant(q_client, size=len(vectors[0]))
+            
         for j, vector in enumerate(vectors):
             await q_client.insert_chunk(
                 source_id=source_id,

@@ -18,7 +18,8 @@ class VectorStoreClient:
             else:
                 _qdrant_client = AsyncQdrantClient(host=settings.QDRANT_HOST, port=settings.QDRANT_PORT, timeout=45.0)
         self.client = _qdrant_client
-        self.collection_name = "evidence_chunks"
+        # Upgrade to v2 schema to mathematically abandon the corrupted 768-D architecture constraints
+        self.collection_name = "evidence_chunks_v2"
 
     async def insert_chunk(self, source_id: str, source_type: str, text: str, vector: list[float], metadata: dict):
         point_id = str(uuid.uuid4())

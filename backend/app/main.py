@@ -19,10 +19,15 @@ async def global_exception_handler(request: Request, exc: Exception):
     error_msg = f"{type(exc).__name__}: {str(exc)}"
     tb = traceback.format_exc()
     logger.error(f"Global exception: {error_msg}\n{tb}")
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={"detail": error_msg, "traceback": tb}
     )
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.on_event("startup")
 async def startup_event():

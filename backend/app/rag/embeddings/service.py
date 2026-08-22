@@ -10,7 +10,10 @@ class EmbeddingService:
     def __init__(self):
         global _genai_client
         if _genai_client is None:
-            _genai_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            _genai_client = genai.Client(
+                api_key=settings.GEMINI_API_KEY,
+                http_options={'api_version': 'v1'}
+            )
         self.client = _genai_client
         self.model = settings.EMBEDDING_MODEL
         self.dimension = settings.EMBEDDING_DIMENSION

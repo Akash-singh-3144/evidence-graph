@@ -6,36 +6,30 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self):
-        self.api_key = settings.GEMINI_API_KEY
-        self.model = settings.EMBEDDING_MODEL.strip()
-        if not self.model.startswith("models/"):
-            self.model = f"models/{self.model}"
-        self.dimension = settings.EMBEDDING_DIMENSION
+        # We are completely bypassing Google embeddings to circumvent geographic / billing blockades.
+        # We enforce a massive 768-dimensional model standard to match the Qdrant DB schema natively.
+        self.huggingface_url = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-mpnet-base-v2"
+        self.dimension = 768
 
     async def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
         embeddings_matrix = []
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for chunk_text in texts:
-                payload = {
-                    "model": self.model,
-                    "content": {
-                        "parts": [{"text": chunk_text}]
-                    }
-                }
-                response = await client.post(url, json=payload)
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            # Send the entire batch array strictly as 1 HTTP request to preserve free HF rate limits
+            payload = {"inputs": texts}
+            response = await client.post(self.huggingface_url, json=payload)
+            
+            if response.status_code != 200:
+                error_data = response.text
+                logger.error(f"HuggingFace REST API Error: {response.status_code} - {error_data}")
                 
-                if response.status_code != 200:
-                    error_data = response.text
-                    logger.error(f"Google REST API Error: {response.status_code} - {error_data}")
-                    raise ValueError(f"Google Embedding API permanently rejected the request: HTTP {response.status_code}. Detail: {error_data}")
-                
-                res_json = response.json()
-                try:
-                    emb_values = res_json["embedding"]["values"]
-                    embeddings_matrix.append(emb_values)
-                except KeyError:
-                    raise ValueError(f"Failed to parse embedding vectors from valid REST response: {res_json}")
-                    
-        return embeddings_matrix
+                if "loading" in error_data.lower():
+                    raise ValueError(f"HuggingFace cold-start: Model is currently loading into memory. Please wait exactly 30 seconds and click Upload again! {error_data}")
+                raise ValueError(f"HuggingFace Embedding API rejected the request: HTTP {response.status_code}. Detail: {error_data}")
+            
+            res_json = response.json()
+            if isinstance(res_json, list) and len(res_json) > 0 and isinstance(res_json[0], list):
+                # The pipeline directly returns the multidimensional float matrix
+                return res_json
+            else:
+                raise ValueError(f"Failed to parse embedding vectors from HuggingFace response: {res_json[:100]}")

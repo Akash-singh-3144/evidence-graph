@@ -26,9 +26,11 @@ class Investigator:
         # 2. Tools
         tools = await self.tool_selector.select_tools(query, plan)
         
-        # Enforce PDF implicit search for all queries unconditionally 
+        # Enforce PDF and WEB implicit search for all queries unconditionally 
         if "pdf" not in [t.lower() for t in tools]:
             tools.append("pdf")
+        if "web" not in [t.lower() for t in tools]:
+            tools.append("web")
             
         # 3. Native Agentic Tool Fetching
         collector = EvidenceCollector()

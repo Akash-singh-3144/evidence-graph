@@ -79,7 +79,6 @@ async def upload_pdf(file: UploadFile = File(...)):
 async def index_web(req: WebRequest):
     embedder = EmbeddingService()
     q_client = VectorStoreClient()
-    await init_qdrant(q_client, embedder.dimension)
 
     async with httpx.AsyncClient() as client:
         resp = await client.get(req.url, follow_redirects=True)
@@ -96,6 +95,10 @@ async def index_web(req: WebRequest):
         for i in range(0, len(all_chunks), 90):
             batch_texts = all_chunks[i:i+90]
             vectors = await embedder.generate_embeddings_batch(batch_texts)
+            
+            if i == 0:
+                await init_qdrant(q_client, size=len(vectors[0]))
+                
             for j, vector in enumerate(vectors):
                 await q_client.insert_chunk(
                     source_id=source_id,

@@ -14,11 +14,22 @@ class GeminiClient:
         try:
             config = {"response_mime_type": "application/json"} if schema else {}
             # Simplified genai SDK stub usage
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=config
-            )
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=config
+                )
+            except Exception as inner_e:
+                if "404" in str(inner_e) or "not found" in str(inner_e).lower():
+                    logger.warning(f"Tier blocked for {self.model}, falling back to gemini-1.5-flash: {inner_e}")
+                    response = self.client.models.generate_content(
+                        model="gemini-1.5-flash",
+                        contents=prompt,
+                        config=config
+                    )
+                else:
+                    raise inner_e
             text = response.text
             if schema:
                 try:

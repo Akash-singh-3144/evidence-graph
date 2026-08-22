@@ -36,7 +36,7 @@ async def startup_event():
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production specify actual origins
+    allow_origins=[url.strip() for url in settings.FRONTEND_URLS.split(",") if url.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-004"
     EMBEDDING_DIMENSION: int = 768
 
+    # CORS
+    FRONTEND_URLS: str = "http://localhost:3000,http://127.0.0.1:3000"
+
     # App database
     APP_DB_HOST: str
     APP_DB_PORT: int

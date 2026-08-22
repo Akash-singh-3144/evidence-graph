@@ -26,11 +26,14 @@ class EmbeddingService:
                     )
                 except Exception as e:
                     if "NOT_FOUND" in str(e):
-                        logger.warning(f"Model {self.model} not found, falling back to 'text-embedding-004'")
-                        response = self.client.models.embed_content(
-                            model="text-embedding-004",
-                            contents=chunk_text
-                        )
+                        if self.model.strip() != "embedding-001":
+                            logger.warning(f"Model {self.model} not found, falling back to 'embedding-001'")
+                            response = self.client.models.embed_content(
+                                model="embedding-001",
+                                contents=chunk_text
+                            )
+                        else:
+                            raise ValueError("Google API Key explicitly restricts access to all known Embedding models. Please replace your API key with a standard AI Studio key.")
                     else:
                         raise e
                 embeddings_matrix.append(response.embeddings[0].values)

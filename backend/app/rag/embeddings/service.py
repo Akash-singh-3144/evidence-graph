@@ -12,7 +12,7 @@ class EmbeddingService:
         if _genai_client is None:
             _genai_client = genai.Client(
                 api_key=settings.GEMINI_API_KEY,
-                http_options={'api_version': 'v1'}
+                http_options={'api_version': 'v1alpha'}
             )
         self.client = _genai_client
         self.model = settings.EMBEDDING_MODEL

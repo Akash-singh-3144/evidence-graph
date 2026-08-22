@@ -81,7 +81,11 @@ async def index_web(req: WebRequest):
     q_client = VectorStoreClient()
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(req.url, follow_redirects=True)
+        resp = await client.get(
+            req.url, 
+            follow_redirects=True, 
+            headers={"User-Agent": "EvidenceGraph-Bot/1.0 (Integration Framework)"}
+        )
     
     soup = bs4.BeautifulSoup(resp.text, "html.parser")
     text = soup.get_text(separator=" ", strip=True)

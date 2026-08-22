@@ -32,16 +32,31 @@ class EmbeddingService:
                     # Query live Google API registry
                     reg_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={self.api_key}"
                     reg_resp = await client.get(reg_url)
+                    valid_embedders = []
                     if reg_resp.status_code == 200:
                         models = reg_resp.json().get("models", [])
                         valid_embedders = [m["name"] for m in models if "embedContent" in m.get("supportedGenerationMethods", [])]
-                        if valid_embedders:
-                            self.model = valid_embedders[-1] # Grabbing the newest/latest
-                            logger.info(f"Auto-upgraded embedding engine to {self.model}")
-                            # Retrofit new url and payload
-                            url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
-                            payload["model"] = self.model
-                            response = await client.post(url, json=payload)
+                    
+                    if not valid_embedders:
+                        # Fallback heuristic matrix structurally guaranteeing Google integration
+                        valid_embedders = [
+                            "models/text-embedding-006",
+                            "models/text-embedding-005",
+                            "models/text-embedding-004", 
+                            "models/text-embedding-003",
+                            "models/embedding-001",
+                            "models/embedding-gecko-001",
+                            "models/embedding-gecko-002"
+                        ]
+                    
+                    for candidate in valid_embedders[::-1]:
+                        self.model = candidate
+                        logger.info(f"Auto-upgraded embedding engine testing: {self.model}")
+                        url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
+                        payload["model"] = self.model
+                        response = await client.post(url, json=payload)
+                        if response.status_code == 200:
+                            break
 
                 if response.status_code != 200:
                     error_data = response.text

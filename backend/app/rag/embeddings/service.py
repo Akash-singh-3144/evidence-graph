@@ -27,6 +27,22 @@ class EmbeddingService:
                 }
                 response = await client.post(url, json=payload)
                 
+                if response.status_code == 404:
+                    logger.warning(f"Embedding model {self.model} deprecated! Auto-discovering replacement via ModelService...")
+                    # Query live Google API registry
+                    reg_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={self.api_key}"
+                    reg_resp = await client.get(reg_url)
+                    if reg_resp.status_code == 200:
+                        models = reg_resp.json().get("models", [])
+                        valid_embedders = [m["name"] for m in models if "embedContent" in m.get("supportedGenerationMethods", [])]
+                        if valid_embedders:
+                            self.model = valid_embedders[-1] # Grabbing the newest/latest
+                            logger.info(f"Auto-upgraded embedding engine to {self.model}")
+                            # Retrofit new url and payload
+                            url = f"https://generativelanguage.googleapis.com/v1beta/{self.model}:embedContent?key={self.api_key}"
+                            payload["model"] = self.model
+                            response = await client.post(url, json=payload)
+
                 if response.status_code != 200:
                     error_data = response.text
                     logger.error(f"Google REST API Error: {response.status_code} - {error_data}")

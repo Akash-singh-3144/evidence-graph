@@ -7,7 +7,10 @@ logger = logging.getLogger(__name__)
 
 class GeminiClient:
     def __init__(self):
-        self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self.client = genai.Client(
+            api_key=settings.GEMINI_API_KEY,
+            http_options={'api_version': 'v1beta'}
+        )
         self.model = settings.GEMINI_MODEL
 
     async def generate_response(self, prompt: str, schema=None):
@@ -21,10 +24,10 @@ class GeminiClient:
                     config=config
                 )
             except Exception as inner_e:
-                if "404" in str(inner_e) or "not found" in str(inner_e).lower():
-                    logger.warning(f"Tier blocked for {self.model}, falling back to gemini-1.5-flash: {inner_e}")
+                if "404" in str(inner_e) or "not found" in str(inner_e).lower() or "gemini-3.6" in str(inner_e):
+                    logger.warning(f"Legacy model deprecated or inaccessible, auto-upgrading to gemini-3.6-flash: {inner_e}")
                     response = self.client.models.generate_content(
-                        model="gemini-1.5-flash",
+                        model="gemini-3.6-flash",
                         contents=prompt,
                         config=config
                     )

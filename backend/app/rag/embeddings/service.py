@@ -17,11 +17,21 @@ class EmbeddingService:
 
     async def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
         try:
-            response = self.client.models.embed_content(
-                model=self.model,
-                contents=texts,
-                config={"output_dimensionality": self.dimension}
-            )
+            try:
+                response = self.client.models.embed_content(
+                    model=self.model.strip(),
+                    contents=texts,
+                    config={"output_dimensionality": self.dimension}
+                )
+            except Exception as e:
+                if "NOT_FOUND" in str(e):
+                    logger.warning(f"Model {self.model} not found, falling back to 'embedding-001'")
+                    response = self.client.models.embed_content(
+                        model="embedding-001",
+                        contents=texts,
+                    )
+                else:
+                    raise e
             # return array of embeddings directly
             return [e.values for e in response.embeddings]
         except Exception as e:
